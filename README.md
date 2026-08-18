@@ -10,6 +10,7 @@ Dark, modern web app for **playing with**, **sharing**, and **learning** ML algo
 | 2 | **Attention** | Multi-head heatmap · arcs · causal mask |
 | 3 | **Random Forest** | Bootstrap · Gini growth · ensemble votes |
 | 4 | **K-Means** | k-means++ · centroid animation · inertia |
+| 5 | **Tiny MLP** | XOR · ReLU hidden · backprop timeline |
 
 ## Visual
 
@@ -32,6 +33,8 @@ Dark, modern web app for **playing with**, **sharing**, and **learning** ML algo
 /?algo=gd&surface=himmelblau&opt=adam&lr=0.01
 /?algo=attn&ex=cat&mask=causal&theme=neon
 /?algo=km&k=5&embed=1&diff=beginner
+/?algo=mlp&ds=xor&h=6&lr=0.8
+/?algo=gd&surface=saddle&opt=gd&cmp=1
 ```
 
 ## Learn
@@ -44,7 +47,7 @@ Dark, modern web app for **playing with**, **sharing**, and **learning** ML algo
 ## Play
 
 - Sidebar **Playground** presets (auto-play)
-- Keyboard: `1–4` · `Space` · `P` · `?` for full list
+- Keyboard: `1–5` · `Space` · `P` · `?` for full list
 
 ## Run
 

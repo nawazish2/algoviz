@@ -24,9 +24,18 @@ interface ControlsProps {
   step: number
   totalSteps: number
   pos: Vec2
+  compareLoss: number | null
+  compareKind: OptimizerKind | null
 }
 
-export function Controls({ loss, step, totalSteps, pos }: ControlsProps) {
+export function Controls({
+  loss,
+  step,
+  totalSteps,
+  pos,
+  compareLoss,
+  compareKind,
+}: ControlsProps) {
   const surface = useVisualizerStore((s) => s.surface)
   const optimizer = useVisualizerStore((s) => s.optimizer)
   const learningRate = useVisualizerStore((s) => s.learningRate)
@@ -48,6 +57,8 @@ export function Controls({ loss, step, totalSteps, pos }: ControlsProps) {
   const setIsPlaying = useVisualizerStore((s) => s.setIsPlaying)
   const reset = useVisualizerStore((s) => s.reset)
   const randomizeStart = useVisualizerStore((s) => s.randomizeStart)
+  const compare = useVisualizerStore((s) => s.compare)
+  const toggleCompare = useVisualizerStore((s) => s.toggleCompare)
 
   const surfaceDef = SURFACES[surface]
   const progress = totalSteps > 1 ? step / (totalSteps - 1) : 0
@@ -147,7 +158,36 @@ export function Controls({ loss, step, totalSteps, pos }: ControlsProps) {
         <Stat label="Step" value={String(step)} mono />
         <Stat label="θx" value={pos.x.toFixed(4)} mono accent="cyan" />
         <Stat label="θy" value={pos.y.toFixed(4)} mono accent="cyan" />
+        {compareLoss !== null && compareKind && (
+          <Stat
+            label={`${compareKind === 'gd' ? 'Vanilla' : 'Adam'} loss`}
+            value={formatLoss(compareLoss)}
+            mono
+            accent="cyan"
+          />
+        )}
       </div>
+
+      <button
+        type="button"
+        onClick={() => toggleCompare()}
+        className={cn(
+          'rounded-xl px-3 py-2.5 text-left text-xs ring-1 transition',
+          compare
+            ? 'bg-cyan-500/15 text-cyan-200 ring-cyan-400/40'
+            : 'bg-white/[0.03] text-zinc-400 ring-white/5 hover:bg-white/[0.06] hover:text-zinc-200',
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-medium">Compare paths</span>
+          <span className="font-mono text-[10px] text-zinc-500">
+            {compare ? 'on' : 'off'}
+          </span>
+        </div>
+        <p className="mt-0.5 text-[11px] text-zinc-500">
+          Overlay {optimizer === 'adam' ? 'Vanilla GD' : 'Adam'} in cyan.
+        </p>
+      </button>
 
       {/* Surface */}
       <Section title="Loss Surface">

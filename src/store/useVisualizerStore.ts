@@ -5,12 +5,9 @@ import {
   type SurfaceKind,
   type Vec2,
 } from '../lib/gradientDescent'
+import type { AlgorithmId } from '../lib/algorithms'
 
-export type AlgorithmId =
-  | 'gradient-descent'
-  | 'attention'
-  | 'random-forest'
-  | 'kmeans'
+export type { AlgorithmId }
 
 interface VisualizerState {
   algorithm: AlgorithmId
@@ -26,6 +23,8 @@ interface VisualizerState {
   maxSteps: number
   currentStep: number
   pathVersion: number
+  /** Overlay a second optimizer path (Vanilla GD vs Adam). */
+  compare: boolean
 
   setSurface: (s: SurfaceKind) => void
   setOptimizer: (o: OptimizerKind) => void
@@ -39,8 +38,10 @@ interface VisualizerState {
   setCurrentStep: (n: number) => void
   reset: () => void
   randomizeStart: () => void
+  setCompare: (v: boolean) => void
+  toggleCompare: () => void
   /** Apply shareable URL params without cascading resets incorrectly */
-  hydrateGd: ( partial: {
+  hydrateGd: (partial: {
     surface?: SurfaceKind
     optimizer?: OptimizerKind
     learningRate?: number
@@ -48,6 +49,7 @@ interface VisualizerState {
     startPos?: Vec2
     maxSteps?: number
     speed?: number
+    compare?: boolean
   }) => void
 }
 
@@ -71,6 +73,7 @@ export const useVisualizerStore = create<VisualizerState>((set, get) => ({
   maxSteps: 200,
   currentStep: 0,
   pathVersion: 0,
+  compare: false,
 
   setSurface: (s) =>
     set({
@@ -135,6 +138,9 @@ export const useVisualizerStore = create<VisualizerState>((set, get) => ({
       pathVersion: get().pathVersion + 1,
     }),
 
+  setCompare: (compare) => set({ compare }),
+  toggleCompare: () => set({ compare: !get().compare }),
+
   randomizeStart: () => {
     const { surface } = get()
     const d = SURFACES[surface].domain
@@ -169,6 +175,7 @@ export const useVisualizerStore = create<VisualizerState>((set, get) => ({
       currentStep: 0,
       isPlaying: false,
       pathVersion: cur.pathVersion + 1,
+      compare: partial.compare ?? cur.compare,
     })
   },
 }))

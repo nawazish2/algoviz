@@ -9,6 +9,7 @@ import {
 import {
   DEFAULT_STEP,
   SURFACES,
+  compareOptimizer,
   runPath,
   type PathPoint,
 } from '../../lib/gradientDescent'
@@ -30,6 +31,7 @@ export function GradientDescentView() {
   const isPlaying = useVisualizerStore((s) => s.isPlaying)
   const speed = useVisualizerStore((s) => s.speed)
   const pathVersion = useVisualizerStore((s) => s.pathVersion)
+  const compare = useVisualizerStore((s) => s.compare)
   const setCurrentStep = useVisualizerStore((s) => s.setCurrentStep)
   const setIsPlaying = useVisualizerStore((s) => s.setIsPlaying)
   const autoOrbit = useUiStore((s) => s.autoOrbit)
@@ -53,6 +55,31 @@ export function GradientDescentView() {
   }, [
     surfaceId,
     optimizer,
+    learningRate,
+    momentum,
+    startPos,
+    maxSteps,
+    pathVersion,
+  ])
+
+  const compareKind = compareOptimizer(optimizer)
+  const comparePath: PathPoint[] | null = useMemo(() => {
+    if (!compare) return null
+    return runPath(
+      startPos,
+      SURFACES[surfaceId],
+      compareKind,
+      {
+        ...DEFAULT_STEP,
+        lr: learningRate,
+        beta: momentum,
+      },
+      maxSteps,
+    )
+  }, [
+    compare,
+    compareKind,
+    surfaceId,
     learningRate,
     momentum,
     startPos,
@@ -127,6 +154,14 @@ export function GradientDescentView() {
               currentStep={currentStep}
               surfaceId={surfaceId}
             />
+            {comparePath && (
+              <OptimizerPath
+                path={comparePath}
+                currentStep={currentStep}
+                surfaceId={surfaceId}
+                tone="cyan"
+              />
+            )}
             <Environment preset="night" />
           </Suspense>
 
@@ -223,6 +258,13 @@ export function GradientDescentView() {
             step={currentStep}
             totalSteps={path.length}
             pos={pos}
+            compareLoss={
+              comparePath
+                ? (comparePath[Math.min(currentStep, comparePath.length - 1)]
+                    ?.z ?? null)
+                : null
+            }
+            compareKind={compare ? compareKind : null}
           />
         </aside>
       )}

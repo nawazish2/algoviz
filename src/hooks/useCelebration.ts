@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useVisualizerStore } from '../store/useVisualizerStore'
 import { useKMeansStore } from '../store/useKMeansStore'
 import { useForestStore } from '../store/useForestStore'
+import { useMlpStore } from '../store/useMlpStore'
 import { useUiStore } from '../store/useUiStore'
 import { SURFACES, runPath, DEFAULT_STEP } from '../lib/gradientDescent'
 
@@ -10,6 +11,7 @@ export function useCelebration() {
   const gdCelebrated = useRef(false)
   const kmCelebrated = useRef(false)
   const rfCelebrated = useRef(false)
+  const mlpCelebrated = useRef(false)
 
   const algorithm = useVisualizerStore((s) => s.algorithm)
   const gdStep = useVisualizerStore((s) => s.currentStep)
@@ -30,6 +32,10 @@ export function useCelebration() {
   const rfTimeline = useForestStore((s) => s.timeline)
   const rfPlaying = useForestStore((s) => s.isPlaying)
 
+  const mlpStep = useMlpStore((s) => s.step)
+  const mlpPlaying = useMlpStore((s) => s.isPlaying)
+  const mlpRun = useMlpStore((s) => s.run)
+
   // Reset flags when config changes
   useEffect(() => {
     gdCelebrated.current = false
@@ -40,6 +46,9 @@ export function useCelebration() {
   useEffect(() => {
     rfCelebrated.current = false
   }, [rfTimeline.length, algorithm])
+  useEffect(() => {
+    mlpCelebrated.current = false
+  }, [mlpRun.seed, mlpRun.hidden, mlpRun.lr, algorithm])
 
   // GD convergence
   useEffect(() => {
@@ -111,4 +120,22 @@ export function useCelebration() {
       })
     }
   }, [algorithm, rfStep, rfPlaying, rfTimeline.length])
+
+  // MLP learned
+  useEffect(() => {
+    if (algorithm !== 'mlp' || mlpCelebrated.current) return
+    if (mlpPlaying) return
+    const snap = mlpRun.epochs[mlpStep]
+    if (!snap || mlpStep === 0) return
+    const atEnd = mlpStep >= mlpRun.epochs.length - 1
+    if (atEnd && snap.accuracy >= 0.9) {
+      mlpCelebrated.current = true
+      useUiStore.getState().fireConfetti()
+      useUiStore.getState().pushToast({
+        tone: 'success',
+        title: '🧠 Net learned it',
+        body: `${Math.round(snap.accuracy * 100)}% accuracy · loss ${snap.loss.toFixed(3)}`,
+      })
+    }
+  }, [algorithm, mlpStep, mlpPlaying, mlpRun])
 }

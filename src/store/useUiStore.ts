@@ -48,6 +48,10 @@ interface UiState {
   lastPresetId: string | null
   setLastPresetId: (id: string | null) => void
 
+  sidebarOpen: boolean
+  setSidebarOpen: (v: boolean) => void
+  toggleSidebar: () => void
+
   reducedMotion: boolean
 }
 
@@ -115,6 +119,10 @@ export const useUiStore = create<UiState>((set, get) => ({
 
   lastPresetId: null,
   setLastPresetId: (id) => set({ lastPresetId: id }),
+
+  sidebarOpen: false,
+  setSidebarOpen: (v) => set({ sidebarOpen: v }),
+  toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
 
   reducedMotion:
     typeof window !== 'undefined' &&

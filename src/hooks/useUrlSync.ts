@@ -10,6 +10,7 @@ import { useVisualizerStore } from '../store/useVisualizerStore'
 import { useAttentionStore } from '../store/useAttentionStore'
 import { useForestStore } from '../store/useForestStore'
 import { useKMeansStore } from '../store/useKMeansStore'
+import { useMlpStore } from '../store/useMlpStore'
 import { useUiStore } from '../store/useUiStore'
 
 function snapshotSearch(forceEmbed?: boolean) {
@@ -17,6 +18,7 @@ function snapshotSearch(forceEmbed?: boolean) {
   const attn = useAttentionStore.getState()
   const rf = useForestStore.getState()
   const km = useKMeansStore.getState()
+  const mlp = useMlpStore.getState()
   const ui = useUiStore.getState()
   return serializeUrlState({
     algorithm: gd.algorithm,
@@ -28,6 +30,7 @@ function snapshotSearch(forceEmbed?: boolean) {
       startPos: gd.startPos,
       maxSteps: gd.maxSteps,
       speed: gd.speed,
+      compare: gd.compare,
     },
     attn: {
       exampleId: attn.exampleId,
@@ -54,6 +57,14 @@ function snapshotSearch(forceEmbed?: boolean) {
       seed: km.config.seed,
       nSamples: km.config.nSamples,
       maxIter: km.config.maxIter,
+    },
+    mlp: {
+      dataset: mlp.config.dataset,
+      hidden: mlp.config.hidden,
+      lr: mlp.config.lr,
+      epochs: mlp.config.epochs,
+      nSamples: mlp.config.nSamples,
+      seed: mlp.config.seed,
     },
     ui: {
       embed: forceEmbed ?? ui.embed,
@@ -89,6 +100,7 @@ export function useUrlSync() {
             : undefined,
         maxSteps: shared.gd.maxSteps,
         speed: shared.gd.speed,
+        compare: shared.gd.compare,
       })
     }
     if (shared.attn) {
@@ -123,6 +135,16 @@ export function useUrlSync() {
         maxIter: shared.km.maxIter,
       })
     }
+    if (shared.mlp) {
+      useMlpStore.getState().hydrate({
+        dataset: shared.mlp.dataset,
+        hidden: shared.mlp.hidden,
+        lr: shared.mlp.lr,
+        epochs: shared.mlp.epochs,
+        nSamples: shared.mlp.nSamples,
+        seed: shared.mlp.seed,
+      })
+    }
     if (shared.ui) {
       if (shared.ui.embed) useUiStore.getState().setEmbed(true)
       if (shared.ui.theme) useUiStore.getState().setTheme(shared.ui.theme)
@@ -152,6 +174,7 @@ export function useUrlSync() {
       useAttentionStore.subscribe(schedule),
       useForestStore.subscribe(schedule),
       useKMeansStore.subscribe(schedule),
+      useMlpStore.subscribe(schedule),
       useUiStore.subscribe(schedule),
     ]
 

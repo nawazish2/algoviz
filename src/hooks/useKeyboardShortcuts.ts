@@ -1,22 +1,15 @@
 import { useEffect, type RefObject } from 'react'
-import { useVisualizerStore, type AlgorithmId } from '../store/useVisualizerStore'
-import { useForestStore } from '../store/useForestStore'
-import { useKMeansStore } from '../store/useKMeansStore'
+import { useVisualizerStore } from '../store/useVisualizerStore'
 import { useUiStore } from '../store/useUiStore'
 import { PLAYGROUND } from '../lib/playground'
+import { ALGO_KEYS } from '../lib/algorithms'
+import { resetFor, togglePlayFor } from '../lib/algorithmActions'
 import { getShareUrl, getEmbedSnippet } from './useUrlSync'
 import {
   exportMainScreenshot,
   makeExportFilename,
 } from '../lib/exportScreenshot'
 import { ALGO_TO_PARAM } from '../lib/urlState'
-
-const ALGO_KEYS: Record<string, AlgorithmId> = {
-  '1': 'gradient-descent',
-  '2': 'attention',
-  '3': 'random-forest',
-  '4': 'kmeans',
-}
 
 export function useKeyboardShortcuts(
   exportRootRef: RefObject<HTMLElement | null>,
@@ -42,6 +35,7 @@ export function useKeyboardShortcuts(
       if (e.key === 'Escape') {
         useUiStore.getState().setShowShortcuts(false)
         useUiStore.getState().closeGlossary()
+        useUiStore.getState().setSidebarOpen(false)
         return
       }
 
@@ -53,30 +47,13 @@ export function useKeyboardShortcuts(
 
       if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault()
-        const algo = useVisualizerStore.getState().algorithm
-        if (algo === 'gradient-descent') {
-          useVisualizerStore.getState().togglePlay()
-        } else if (algo === 'random-forest') {
-          useForestStore.getState().togglePlay()
-        } else if (algo === 'kmeans') {
-          useKMeansStore.getState().togglePlay()
-        } else {
-          useUiStore.getState().pushToast({
-            tone: 'info',
-            title: 'Click a token',
-            body: 'Attention is interactive — pick a query row on the heatmap.',
-          })
-        }
+        togglePlayFor(useVisualizerStore.getState().algorithm)
         return
       }
 
       if (e.key === 'r' || e.key === 'R') {
         e.preventDefault()
-        const algo = useVisualizerStore.getState().algorithm
-        if (algo === 'gradient-descent') useVisualizerStore.getState().reset()
-        else if (algo === 'random-forest')
-          useForestStore.getState().resetGrowth()
-        else if (algo === 'kmeans') useKMeansStore.getState().reset()
+        resetFor(useVisualizerStore.getState().algorithm)
         return
       }
 

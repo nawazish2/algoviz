@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   Keyboard,
   Palette,
+  Menu,
 } from 'lucide-react'
 import { getShareUrl, getEmbedSnippet } from '../../hooks/useUrlSync'
 import {
@@ -51,6 +52,8 @@ export function Toolbar({
   const setEmbed = useUiStore((s) => s.setEmbed)
   const pushToast = useUiStore((s) => s.pushToast)
   const setShowShortcuts = useUiStore((s) => s.setShowShortcuts)
+  const toggleSidebar = useUiStore((s) => s.toggleSidebar)
+  const sidebarOpen = useUiStore((s) => s.sidebarOpen)
 
   const [copied, setCopied] = useState<'link' | 'embed' | null>(null)
   const [exporting, setExporting] = useState(false)
@@ -153,6 +156,17 @@ export function Toolbar({
           'backdrop-blur-xl',
         )}
       >
+        {!embed && (
+          <IconBtn
+            label="Algorithms menu"
+            onClick={toggleSidebar}
+            active={sidebarOpen}
+            className="min-[900px]:hidden"
+          >
+            <Menu className="h-4 w-4" strokeWidth={2} />
+          </IconBtn>
+        )}
+
         <IconBtn
           label="Copy share link (S)"
           onClick={share}
@@ -292,6 +306,7 @@ function IconBtn({
   active,
   success,
   disabled,
+  className,
 }: {
   children: ReactNode
   onClick: () => void
@@ -299,6 +314,7 @@ function IconBtn({
   active?: boolean
   success?: boolean
   disabled?: boolean
+  className?: string
 }) {
   return (
     <button
@@ -306,6 +322,8 @@ function IconBtn({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      aria-expanded={label === 'Algorithms menu' ? active : undefined}
+      aria-controls={label === 'Algorithms menu' ? 'algo-sidebar' : undefined}
       title={label}
       className={cn(
         'relative flex h-8 w-8 items-center justify-center rounded-full transition',
@@ -314,6 +332,7 @@ function IconBtn({
         active && !success && 'bg-white/[0.1] text-white',
         success && 'bg-emerald-500/15 text-emerald-300',
         disabled && 'cursor-not-allowed opacity-40',
+        className,
       )}
     >
       {children}

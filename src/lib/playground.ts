@@ -1,7 +1,8 @@
 /**
  * One-click playground scenarios — the fun entry points.
  */
-import type { AlgorithmId } from '../store/useVisualizerStore'
+import type { AlgorithmId } from './algorithms'
+import type { MlpDataset } from './mlp'
 import type { OptimizerKind, SurfaceKind } from './gradientDescent'
 import type { MaskMode } from './attention'
 import type { DatasetKind } from './randomForest'
@@ -13,7 +14,7 @@ export interface PlaygroundPreset {
   blurb: string
   algorithm: AlgorithmId
   /** Accent for chip UI */
-  tone: 'indigo' | 'violet' | 'emerald' | 'rose' | 'amber'
+  tone: 'indigo' | 'violet' | 'emerald' | 'rose' | 'amber' | 'sky'
   apply: () => void
 }
 
@@ -21,6 +22,7 @@ import { useVisualizerStore } from '../store/useVisualizerStore'
 import { useAttentionStore } from '../store/useAttentionStore'
 import { useForestStore } from '../store/useForestStore'
 import { useKMeansStore } from '../store/useKMeansStore'
+import { useMlpStore } from '../store/useMlpStore'
 
 function go(algo: AlgorithmId) {
   useVisualizerStore.getState().setAlgorithm(algo)
@@ -91,6 +93,26 @@ function rf(opts: {
   })
   if (opts.autoPlay !== false) {
     setTimeout(() => useForestStore.getState().setIsPlaying(true), 80)
+  }
+}
+
+function mlp(opts: {
+  dataset: MlpDataset
+  hidden?: number
+  lr?: number
+  epochs?: number
+  autoPlay?: boolean
+}) {
+  go('mlp')
+  useMlpStore.getState().hydrate({
+    dataset: opts.dataset,
+    hidden: opts.hidden ?? 6,
+    lr: opts.lr ?? 0.7,
+    epochs: opts.epochs ?? 220,
+    step: 0,
+  })
+  if (opts.autoPlay !== false) {
+    setTimeout(() => useMlpStore.getState().setIsPlaying(true), 80)
   }
 }
 
@@ -247,6 +269,36 @@ export const PLAYGROUND: PlaygroundPreset[] = [
     tone: 'rose',
     apply: () => km({ dataset: 'moons', k: 2, autoPlay: true }),
   },
+  {
+    id: 'mlp-xor',
+    emoji: '🧠',
+    title: 'XOR solved',
+    blurb: 'Six hidden units fold the checkerboard',
+    algorithm: 'mlp',
+    tone: 'sky',
+    apply: () =>
+      mlp({ dataset: 'xor', hidden: 6, lr: 0.8, epochs: 240, autoPlay: true }),
+  },
+  {
+    id: 'mlp-tiny',
+    emoji: '🫠',
+    title: 'Too-small hidden',
+    blurb: 'Two units often cannot crack XOR',
+    algorithm: 'mlp',
+    tone: 'sky',
+    apply: () =>
+      mlp({ dataset: 'xor', hidden: 2, lr: 0.5, epochs: 200, autoPlay: true }),
+  },
+  {
+    id: 'mlp-hot',
+    emoji: '🔥',
+    title: 'η too high',
+    blurb: 'Loss jitters instead of settling',
+    algorithm: 'mlp',
+    tone: 'amber',
+    apply: () =>
+      mlp({ dataset: 'xor', hidden: 6, lr: 2.2, epochs: 160, autoPlay: true }),
+  },
 ]
 
 export const PRESET_TONES: Record<
@@ -259,4 +311,5 @@ export const PRESET_TONES: Record<
     'bg-emerald-500/15 text-emerald-200 ring-emerald-500/30 hover:bg-emerald-500/25',
   rose: 'bg-rose-500/15 text-rose-200 ring-rose-500/30 hover:bg-rose-500/25',
   amber: 'bg-amber-500/15 text-amber-200 ring-amber-500/30 hover:bg-amber-500/25',
+  sky: 'bg-sky-500/15 text-sky-200 ring-sky-500/30 hover:bg-sky-500/25',
 }

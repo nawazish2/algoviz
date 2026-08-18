@@ -1,63 +1,43 @@
 import { Keyboard } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import {
-  useVisualizerStore,
-  type AlgorithmId,
-} from '../../store/useVisualizerStore'
+import { useVisualizerStore } from '../../store/useVisualizerStore'
 import { useUiStore } from '../../store/useUiStore'
 import { PlaygroundPanel } from './PlaygroundPanel'
-
-const ALGORITHMS: {
-  id: AlgorithmId
-  name: string
-  tag: string
-  key: string
-  accent: string
-  glow: string
-}[] = [
-  {
-    id: 'gradient-descent',
-    name: 'Gradient Descent',
-    tag: '3D Loss Surface',
-    key: '1',
-    accent: 'from-indigo-500/25 to-cyan-500/10',
-    glow: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
-  },
-  {
-    id: 'attention',
-    name: 'Attention',
-    tag: 'Transformer Heatmap',
-    key: '2',
-    accent: 'from-violet-500/20 to-pink-500/10',
-    glow: 'bg-violet-400 shadow-[0_0_8px_#a78bfa]',
-  },
-  {
-    id: 'random-forest',
-    name: 'Random Forest',
-    tag: 'Tree Growth',
-    key: '3',
-    accent: 'from-emerald-500/20 to-cyan-500/10',
-    glow: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
-  },
-  {
-    id: 'kmeans',
-    name: 'K-Means',
-    tag: 'Clustering',
-    key: '4',
-    accent: 'from-rose-500/20 to-amber-500/10',
-    glow: 'bg-rose-400 shadow-[0_0_8px_#fb7185]',
-  },
-]
+import { ALGORITHMS } from '../../lib/algorithms'
 
 export function Sidebar() {
   const active = useVisualizerStore((s) => s.algorithm)
   const setActive = useVisualizerStore((s) => s.setAlgorithm)
   const toggleShortcuts = useUiStore((s) => s.toggleShortcuts)
+  const sidebarOpen = useUiStore((s) => s.sidebarOpen)
+  const setSidebarOpen = useUiStore((s) => s.setSidebarOpen)
+
+  const pick = (id: (typeof ALGORITHMS)[number]['id']) => {
+    setActive(id)
+    setSidebarOpen(false)
+  }
 
   return (
+    <>
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close algorithm menu"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm min-[900px]:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     <aside
       data-export-ignore
-      className="flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-surface-900/90 backdrop-blur-xl"
+      id="algo-sidebar"
+      className={cn(
+        'flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-surface-900/90 backdrop-blur-xl',
+        'max-[899px]:fixed max-[899px]:inset-y-0 max-[899px]:left-0 max-[899px]:z-50',
+        'max-[899px]:transition-transform max-[899px]:duration-200',
+        sidebarOpen
+          ? 'max-[899px]:translate-x-0'
+          : 'max-[899px]:-translate-x-full',
+      )}
     >
       <div className="border-b border-white/[0.06] px-5 py-5">
         <div className="flex items-center gap-2.5">
@@ -95,7 +75,7 @@ export function Sidebar() {
             <button
               key={algo.id}
               type="button"
-              onClick={() => setActive(algo.id)}
+              onClick={() => pick(algo.id)}
               className={cn(
                 'group relative overflow-hidden rounded-xl px-3 py-3 text-left transition duration-200',
                 isActive
@@ -124,6 +104,11 @@ export function Sidebar() {
                   <span className="flex items-center gap-1.5">
                     {isActive && (
                       <span className={cn('h-1.5 w-1.5 rounded-full', algo.glow)} />
+                    )}
+                    {algo.status === 'soon' && (
+                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-amber-300">
+                        soon
+                      </span>
                     )}
                     <kbd className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[9px] text-zinc-600 ring-1 ring-white/5">
                       {algo.key}
@@ -155,5 +140,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

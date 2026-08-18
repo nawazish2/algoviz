@@ -1,33 +1,7 @@
 import { useEffect, useRef } from 'react'
-import type { AlgorithmId } from '../../store/useVisualizerStore'
 import { useVisualizerStore } from '../../store/useVisualizerStore'
 import { useUiStore } from '../../store/useUiStore'
-
-const PALETTES: Record<
-  AlgorithmId,
-  { a: string; b: string; particle: string }
-> = {
-  'gradient-descent': {
-    a: 'rgba(99,102,241,0.14)',
-    b: 'rgba(34,211,238,0.08)',
-    particle: '99,102,241',
-  },
-  attention: {
-    a: 'rgba(139,92,246,0.14)',
-    b: 'rgba(244,114,182,0.08)',
-    particle: '167,139,250',
-  },
-  'random-forest': {
-    a: 'rgba(16,185,129,0.12)',
-    b: 'rgba(34,211,238,0.08)',
-    particle: '52,211,153',
-  },
-  kmeans: {
-    a: 'rgba(244,63,94,0.12)',
-    b: 'rgba(251,191,36,0.08)',
-    particle: '251,113,133',
-  },
-}
+import { ALGORITHM_BY_ID } from '../../lib/algorithms'
 
 interface Particle {
   x: number
@@ -87,7 +61,7 @@ export function AmbientBackground() {
     window.addEventListener('resize', resize)
 
     const tick = () => {
-      const pal = PALETTES[algoRef.current]
+      const pal = ALGORITHM_BY_ID[algoRef.current].palette
       ctx.clearRect(0, 0, w, h)
 
       for (const p of particles) {
@@ -133,7 +107,7 @@ export function AmbientBackground() {
     }
   }, [reduced])
 
-  const pal = PALETTES[algorithm]
+  const pal = ALGORITHM_BY_ID[algorithm].palette
 
   return (
     <div

@@ -15,30 +15,15 @@ import {
 } from './gradientDescent'
 import type { MaskMode } from './attention'
 import type { DatasetKind } from './randomForest'
-import type { AlgorithmId } from '../store/useVisualizerStore'
+import { ALGO_TO_PARAM, PARAM_TO_ALGO, type AlgorithmId } from './algorithms'
+import type { MlpDataset } from './mlp'
 
-export const ALGO_TO_PARAM: Record<AlgorithmId, string> = {
-  'gradient-descent': 'gd',
-  attention: 'attn',
-  'random-forest': 'rf',
-  kmeans: 'km',
-}
-
-export const PARAM_TO_ALGO: Record<string, AlgorithmId> = {
-  gd: 'gradient-descent',
-  'gradient-descent': 'gradient-descent',
-  attn: 'attention',
-  attention: 'attention',
-  rf: 'random-forest',
-  'random-forest': 'random-forest',
-  forest: 'random-forest',
-  km: 'kmeans',
-  kmeans: 'kmeans',
-}
+export { ALGO_TO_PARAM, PARAM_TO_ALGO }
 
 const SURFACES_SET = new Set<string>(Object.keys(SURFACES))
 const OPTS = new Set<OptimizerKind>(['gd', 'momentum', 'adam'])
 const DATASETS = new Set<DatasetKind>(['blobs', 'moons', 'xor'])
+const MLP_DATASETS = new Set<MlpDataset>(['xor', 'moons', 'blobs'])
 const MASKS = new Set<MaskMode>(['none', 'causal'])
 
 export interface SharedGdState {
@@ -50,6 +35,7 @@ export interface SharedGdState {
   startY?: number
   maxSteps?: number
   speed?: number
+  compare?: boolean
 }
 
 export interface SharedAttnState {
@@ -81,6 +67,15 @@ export interface SharedKmState {
   maxIter?: number
 }
 
+export interface SharedMlpState {
+  dataset?: MlpDataset
+  hidden?: number
+  lr?: number
+  epochs?: number
+  nSamples?: number
+  seed?: number
+}
+
 export interface SharedUiState {
   embed?: boolean
   theme?: 'midnight' | 'neon' | 'aurora'
@@ -93,6 +88,7 @@ export interface SharedState {
   attn?: SharedAttnState
   rf?: SharedRfState
   km?: SharedKmState
+  mlp?: SharedMlpState
   ui?: SharedUiState
 }
 
@@ -139,6 +135,7 @@ export function parseUrlState(search = window.location.search): SharedState {
   if (steps !== undefined) gd.maxSteps = steps
   const spd = num(p.get('speed'), 1, 60)
   if (spd !== undefined) gd.speed = spd
+  if (p.get('cmp') === '1' || p.get('cmp') === 'true') gd.compare = true
   if (Object.keys(gd).length) out.gd = gd
 
   // Attention
@@ -193,6 +190,24 @@ export function parseUrlState(search = window.location.search): SharedState {
   if (maxIt !== undefined) km.maxIter = maxIt
   if (Object.keys(km).length) out.km = km
 
+  // Tiny MLP
+  const mlp: SharedMlpState = {}
+  const mds = p.get('mds') ?? (out.algorithm === 'mlp' ? p.get('ds') : null)
+  if (mds && MLP_DATASETS.has(mds as MlpDataset)) {
+    mlp.dataset = mds as MlpDataset
+  }
+  const hid = int(p.get('h'), 2, 12)
+  if (hid !== undefined) mlp.hidden = hid
+  const mlr = num(p.get('mlr') ?? (out.algorithm === 'mlp' ? p.get('lr') : null), 0.01, 3)
+  if (mlr !== undefined) mlp.lr = mlr
+  const ep = int(p.get('ep'), 20, 400)
+  if (ep !== undefined) mlp.epochs = ep
+  const mn = int(p.get('mn'), 20, 200)
+  if (mn !== undefined) mlp.nSamples = mn
+  const mseed = int(p.get('mseed'), 0, 1e9)
+  if (mseed !== undefined) mlp.seed = mseed
+  if (Object.keys(mlp).length) out.mlp = mlp
+
   // UI chrome
   const ui: SharedUiState = {}
   if (p.get('embed') === '1' || p.get('embed') === 'true') ui.embed = true
@@ -219,6 +234,7 @@ export interface SerializeInput {
     startPos: { x: number; y: number }
     maxSteps: number
     speed: number
+    compare?: boolean
   }
   attn: {
     exampleId: string
@@ -246,6 +262,14 @@ export interface SerializeInput {
     nSamples: number
     maxIter: number
   }
+  mlp?: {
+    dataset: MlpDataset
+    hidden: number
+    lr: number
+    epochs: number
+    nSamples: number
+    seed: number
+  }
   ui?: SharedUiState
 }
 
@@ -263,6 +287,7 @@ export function serializeUrlState(s: SerializeInput): string {
     p.set('sy', trimNum(s.gd.startPos.y))
     p.set('steps', String(s.gd.maxSteps))
     p.set('speed', trimNum(s.gd.speed))
+    if (s.gd.compare) p.set('cmp', '1')
   }
 
   if (s.algorithm === 'attention') {
@@ -294,6 +319,15 @@ export function serializeUrlState(s: SerializeInput): string {
     p.set('kseed', String(s.km.seed))
     p.set('kn', String(s.km.nSamples))
     p.set('maxit', String(s.km.maxIter))
+  }
+
+  if (s.algorithm === 'mlp' && s.mlp) {
+    p.set('ds', s.mlp.dataset)
+    p.set('h', String(s.mlp.hidden))
+    p.set('lr', trimNum(s.mlp.lr))
+    p.set('ep', String(s.mlp.epochs))
+    p.set('mn', String(s.mlp.nSamples))
+    p.set('mseed', String(s.mlp.seed))
   }
 
   if (s.ui?.embed) p.set('embed', '1')

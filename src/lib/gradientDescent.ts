@@ -2,6 +2,11 @@
 
 export type Vec2 = { x: number; y: number }
 export type OptimizerKind = 'gd' | 'momentum' | 'adam'
+
+/** Second path in compare mode: always pit the current optimizer against Adam or vanilla GD. */
+export function compareOptimizer(kind: OptimizerKind): OptimizerKind {
+  return kind === 'adam' ? 'gd' : 'adam'
+}
 export type SurfaceKind = 'bowl' | 'himmelblau' | 'saddle' | 'rosenbrock'
 
 export interface SurfaceDef {

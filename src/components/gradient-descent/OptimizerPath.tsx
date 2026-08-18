@@ -13,13 +13,33 @@ interface OptimizerPathProps {
   path: PathPoint[]
   currentStep: number
   surfaceId: SurfaceKind
+  tone?: 'amber' | 'cyan'
 }
+
+const TONES = {
+  amber: {
+    line: '#fbbf24',
+    glow: '#f59e0b',
+    emissive: '#b45309',
+    ball: '#fbbf24',
+    ballEmissive: '#f59e0b',
+  },
+  cyan: {
+    line: '#22d3ee',
+    glow: '#06b6d4',
+    emissive: '#0e7490',
+    ball: '#22d3ee',
+    ballEmissive: '#0891b2',
+  },
+} as const
 
 export function OptimizerPath({
   path,
   currentStep,
   surfaceId,
+  tone = 'amber',
 }: OptimizerPathProps) {
+  const c = TONES[tone]
   const surface = SURFACES[surfaceId]
   const ballRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
@@ -82,14 +102,14 @@ export function OptimizerPath({
         <>
           <Line
             points={trailPoints}
-            color="#fbbf24"
+            color={c.line}
             lineWidth={2}
             transparent
             opacity={0.95}
           />
           <Line
             points={trailPoints}
-            color="#f59e0b"
+            color={c.glow}
             lineWidth={5}
             transparent
             opacity={0.2}
@@ -101,8 +121,8 @@ export function OptimizerPath({
         <mesh key={i} position={pos}>
           <sphereGeometry args={[isEnd ? 0.04 : 0.025, 12, 12]} />
           <meshStandardMaterial
-            color={isEnd ? '#fbbf24' : '#f59e0b'}
-            emissive={isEnd ? '#fbbf24' : '#b45309'}
+            color={isEnd ? c.line : c.glow}
+            emissive={isEnd ? c.line : c.emissive}
             emissiveIntensity={isEnd ? 1.2 : 0.4}
             transparent
             opacity={isEnd ? 1 : 0.55}
@@ -113,8 +133,8 @@ export function OptimizerPath({
       <mesh ref={ballRef} position={initial} castShadow>
         <sphereGeometry args={[0.1, 24, 24]} />
         <meshStandardMaterial
-          color="#fbbf24"
-          emissive="#f59e0b"
+          color={c.ball}
+          emissive={c.ballEmissive}
           emissiveIntensity={1.5}
           metalness={0.3}
           roughness={0.2}
@@ -124,7 +144,7 @@ export function OptimizerPath({
       <mesh ref={glowRef} position={initial}>
         <sphereGeometry args={[0.18, 16, 16]} />
         <meshBasicMaterial
-          color="#fbbf24"
+          color={c.ball}
           transparent
           opacity={0.18}
           depthWrite={false}

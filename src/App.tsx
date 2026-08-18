@@ -15,6 +15,8 @@ import { useUiStore } from './store/useUiStore'
 import { useUrlSync } from './hooks/useUrlSync'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useCelebration } from './hooks/useCelebration'
+import { ALGORITHM_BY_ID, type AlgorithmId } from './lib/algorithms'
+import { ComingSoon } from './components/ComingSoon'
 
 const GradientDescentView = lazy(() =>
   import('./components/gradient-descent/GradientDescentView').then((m) => ({
@@ -36,6 +38,27 @@ const KMeansView = lazy(() =>
     default: m.KMeansView,
   })),
 )
+const MlpView = lazy(() =>
+  import('./components/mlp/MlpView').then((m) => ({
+    default: m.MlpView,
+  })),
+)
+
+function AlgoStage({ algorithm }: { algorithm: AlgorithmId }) {
+  const def = ALGORITHM_BY_ID[algorithm]
+  if (def.status === 'soon' && def.comingSoon) {
+    return <ComingSoon {...def.comingSoon} />
+  }
+  return (
+    <Suspense fallback={<AlgoFallback />}>
+      {algorithm === 'gradient-descent' && <GradientDescentView />}
+      {algorithm === 'attention' && <AttentionView />}
+      {algorithm === 'random-forest' && <ForestView />}
+      {algorithm === 'kmeans' && <KMeansView />}
+      {algorithm === 'mlp' && <MlpView />}
+    </Suspense>
+  )
+}
 
 function AlgoFallback() {
   return (
@@ -89,12 +112,7 @@ export default function App() {
               exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Suspense fallback={<AlgoFallback />}>
-                {active === 'gradient-descent' && <GradientDescentView />}
-                {active === 'attention' && <AttentionView />}
-                {active === 'random-forest' && <ForestView />}
-                {active === 'kmeans' && <KMeansView />}
-              </Suspense>
+              <AlgoStage algorithm={active} />
             </motion.div>
           </AnimatePresence>
 

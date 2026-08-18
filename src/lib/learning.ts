@@ -1,7 +1,7 @@
 /**
  * Learning content: per-algorithm lessons, glossary, difficulty-aware tips.
  */
-import type { AlgorithmId } from '../store/useVisualizerStore'
+import type { AlgorithmId } from './algorithms'
 
 export type Difficulty = 'beginner' | 'curious' | 'nerd'
 
@@ -188,6 +188,42 @@ export const GLOSSARY: Record<string, GlossaryTerm> = {
       'J = Σ_i min_j ‖x_i − μ_j‖². Not convex in assignment+centers jointly; sensitive to k and init.',
     related: ['centroid'],
   },
+  backprop: {
+    id: 'backprop',
+    term: 'Backpropagation',
+    short: 'Error flows backward',
+    beginner:
+      'After a guess, we measure how wrong we were, then tell every weight “nudge this way.”',
+    curious:
+      'Chain rule: dL/dW = (dL/dŷ)(dŷ/dh)(dh/dW). Each layer gets a local gradient from the one above.',
+    nerd:
+      'For BCE + sigmoid, δ_out = ŷ − y. Hidden δ_i = δ_out W₂ᵢ · 1[zᵢ>0]. SGD: W ← W − η δ aᵀ.',
+    related: ['activation', 'hidden-layer', 'learning-rate'],
+  },
+  activation: {
+    id: 'activation',
+    term: 'Activation',
+    short: 'Non-linearity per unit',
+    beginner:
+      'Without ReLU, stacking layers is just one big straight line. The kink lets the net bend.',
+    curious:
+      'ReLU(z)=max(0,z). Dead units stay at 0 if they always get negative pre-activations.',
+    nerd:
+      'ReLU derivative is the step 1[z>0]. Sigmoid output σ(z)=1/(1+e^{-z}) pairs with BCE for a clean (ŷ−y) gradient.',
+    related: ['backprop', 'hidden-layer'],
+  },
+  'hidden-layer': {
+    id: 'hidden-layer',
+    term: 'Hidden layer',
+    short: 'Learned intermediate features',
+    beginner:
+      'XOR is not a straight cut. Hidden units invent new axes so a straight cut works in that new space.',
+    curious:
+      'A 2→H→1 MLP is a universal approximator on compact sets as H grows — here H is tiny on purpose.',
+    nerd:
+      'h = ReLU(W₁x+b₁) ∈ ℝᴴ. Decision regions are piecewise-linear; each unit adds a half-space fold.',
+    related: ['backprop', 'activation'],
+  },
   'kmeans-pp': {
     id: 'kmeans-pp',
     term: 'k-means++',
@@ -343,6 +379,42 @@ export const LESSONS: Record<AlgorithmId, AlgoLesson> = {
     ],
     terms: ['centroid', 'inertia', 'kmeans-pp'],
     tryNext: 'Run “K-Means vs moons” to see a classic failure mode.',
+  },
+  mlp: {
+    algorithm: 'mlp',
+    title: 'Tiny MLP',
+    oneLiner: 'Guess, measure the error, nudge every weight a little.',
+    intuition:
+      'A two-layer net is just “fold the plane, then draw a line.” Backprop is how those folds learn from mistakes.',
+    watchFor: [
+      'XOR starts messy — the field should split into a checker',
+      'Too-small hidden (2) often fails XOR; 6 usually works',
+      'η too high → loss jitters; too low → crawls',
+    ],
+    steps: [
+      {
+        title: 'Forward pass',
+        body: 'Each hidden unit computes ReLU(w·x + b). The output is a sigmoid probability.',
+        formula: 'h = ReLU(W₁x + b₁),  ŷ = σ(W₂h + b₂)',
+      },
+      {
+        title: 'Loss',
+        body: 'Binary cross-entropy asks how surprised the net is by the true label.',
+        formula: 'L = −[y log ŷ + (1−y) log(1−ŷ)]',
+      },
+      {
+        title: 'Backward pass',
+        body: 'The output error (ŷ − y) flows through the chain rule to every weight.',
+        tip: 'Edge thickness is |weight|. Pink is negative, sky is positive.',
+      },
+      {
+        title: 'Step',
+        body: 'Subtract η times the gradient. Full-batch here so the path is deterministic.',
+        formula: 'θ ← θ − η ∇θ L',
+      },
+    ],
+    terms: ['backprop', 'activation', 'hidden-layer', 'learning-rate'],
+    tryNext: 'Open “XOR solved” then drop hidden units to 2.',
   },
 }
 

@@ -3,8 +3,8 @@ import { Keyboard, X } from 'lucide-react'
 import { useUiStore } from '../../store/useUiStore'
 
 const ROWS: { keys: string; action: string }[] = [
-  { keys: '1 – 4', action: 'Switch algorithm (GD · Attn · RF · K-Means)' },
-  { keys: 'Space', action: 'Play / pause current demo' },
+  { keys: '1 – 5', action: 'Switch algorithm (GD · Attn · RF · K-Means · MLP)' },
+  { keys: 'Space', action: 'Play / pause — or cycle attention query' },
   { keys: 'R', action: 'Reset playback / growth' },
   { keys: 'S', action: 'Copy share link' },
   { keys: 'I', action: 'Copy iframe embed HTML' },
